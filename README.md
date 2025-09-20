@@ -1,4 +1,3 @@
-
 # 👁️‍🗨️ Semicolon — *Where syntax meets Sight*
 An assistive device built on **ESP32-CAM + TF-Luna LiDAR + HC-SR04**, running an **Edge Impulse** model for on-device currency detection, with haptics and buzzer feedback.
 
@@ -38,8 +37,6 @@ Upload these files to `assets/` in the repo root:
 ---
 
 ## 🗂️ Repo layout
-
-.
 ├─ firmware/
 │  ├─ src/
 │  │  ├─ main.cpp
@@ -49,7 +46,6 @@ Upload these files to `assets/` in the repo root:
 ├─ mechanical/ (enclosure.stl, faceplate.stl)
 ├─ assets/ (images listed above)
 └─ README.md
-
 ---
 
 ## 🛠️ Hardware
@@ -64,10 +60,33 @@ Upload these files to `assets/` in the repo root:
 
 ---
 
-## 🔌 Wiring (example)
-<p align="center">
-  <img src="assets/wiring.png" width="80%" alt="Wiring diagram"/>
-</p>
+
+
+| Signal | ESP32-CAM Pin | Notes |
+|---|---|---|
+| TF-Luna TX/RX | GPIO16 (RX2) / GPIO17 (TX2) | `Serial2` |
+| HC-SR04 TRIG/ECHO | GPIO14 / GPIO15 | ECHO via divider |
+| Vibration motor | GPIO12 → transistor | base 1kΩ, diode across motor |
+| Buzzer | GPIO13 | Active buzzer |
+| Button | GPIO2 | `INPUT_PULLUP` |
+| Power | 5 V / GND | From boost module; common GND |
+
+---
+---
+
+## 🛠️ Hardware
+- **ESP32-CAM (AI-Thinker)** with **PSRAM enabled**  
+- **TF-Luna LiDAR** (UART)  
+- **HC-SR04 Ultrasonic** (TRIG/ECHO; ECHO via 5V→3.3V divider)  
+- **Vibration motor** (ERM) + NPN transistor (2N2222) + 1 kΩ resistor + diode  
+- **Active buzzer** (or I2S amp + speaker)  
+- **3.7 V Li-ion/LiPo** + TP4056 charger (with protection) + 5 V boost  
+- **Momentary push button**  
+- *(Optional)* OLED I²C screen  
+
+---
+
+
 
 | Signal | ESP32-CAM Pin | Notes |
 |---|---|---|
@@ -99,80 +118,3 @@ build_flags =
   -DEI_CLASSIFIER_TFLITE_ENABLE_ESP_NN=1
   -DEI_CLASSIFIER_ALLOCATION_STATIC=1
 monitor_speed = 115200
-
-cd firmware
-pio run -t upload
-pio device monitor
-
-
-⸻
-
-🧠 Edge Impulse (currency)
-	1.	In Edge Impulse → Deploy → Arduino Library (EON + int8).
-	2.	Place library in firmware/src/inference/edge_impulse/.
-	3.	Use grayscale, QQVGA/QVGA frames to save RAM.
-	4.	Inference result → beep patterns.
-
-⸻
-
-🌐 Web Endpoints
-	•	/ → control page
-	•	/stream → MJPEG stream
-	•	/capture → single JPEG
-	•	/status → JSON camera status
-	•	/control?var=<name>&val=<int> → set camera param
-
-<p align="center">
-  <img src="assets/webui.png" width="80%" alt="Web UI"/>
-</p>
-
-
-
-⸻
-
-🧭 Modes
-	•	NAV: haptics scale with distance.
-	•	CURRENCY: run inference; beep per denomination.
-	•	MUTE: hold button ~1.5s.
-
-⸻
-
-🧪 Quick test
-	1.	Power up device.
-	2.	Visit http://<esp32-ip>/capture → see still image.
-	3.	Visit http://<esp32-ip>/stream → live video works.
-	4.	Press button to switch NAV/CURRENCY; listen for feedback.
-
-⸻
-
-🧯 Troubleshooting
-	•	Camera init fail / resets: Power sag → use boost module >700 mA; disable Wi-Fi if unused:
-
-#include <WiFi.h>
-void setup(){ WiFi.mode(WIFI_OFF); btStop(); }
-
-
-	•	PSRAM allocation error: Lower frame size; use grayscale; ensure Huge APP/custom partition.
-	•	Ultrasonic noisy: Keep wires short; use voltage divider; common ground.
-
-⸻
-
-🗺️ Roadmap
-	•	Tie EI inference tightly to camera ring buffer.
-	•	I2S amp + mini speaker for clearer voice prompts.
-	•	OLED status screen.
-	•	Perfboard/PCB + 3D-printed enclosure.
-
-⸻
-
-🙌 Credits
-	•	Edge Impulse for TinyML tooling.
-	•	ESP32 + open hardware communities.
-
-⸻
-
-📄 License
-
-MIT
-
-Do you want me to also give you the **GitHub commands** (from `git init` → `commit` → `push`) so you can upload this `README.md` file into a fresh repo directly?
