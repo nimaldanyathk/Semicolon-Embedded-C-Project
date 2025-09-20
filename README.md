@@ -37,6 +37,7 @@ Upload these files to `assets/` in the repo root:
 ---
 
 ## 🗂️ Repo layout
+```
 ├─ firmware/
 │  ├─ src/
 │  │  ├─ main.cpp
@@ -46,6 +47,7 @@ Upload these files to `assets/` in the repo root:
 ├─ mechanical/ (enclosure.stl, faceplate.stl)
 ├─ assets/ (images listed above)
 └─ README.md
+```
 ---
 
 ## 🛠️ Hardware
@@ -71,31 +73,8 @@ Upload these files to `assets/` in the repo root:
 | Button | GPIO2 | `INPUT_PULLUP` |
 | Power | 5 V / GND | From boost module; common GND |
 
----
----
-
-## 🛠️ Hardware
-- **ESP32-CAM (AI-Thinker)** with **PSRAM enabled**  
-- **TF-Luna LiDAR** (UART)  
-- **HC-SR04 Ultrasonic** (TRIG/ECHO; ECHO via 5V→3.3V divider)  
-- **Vibration motor** (ERM) + NPN transistor (2N2222) + 1 kΩ resistor + diode  
-- **Active buzzer** (or I2S amp + speaker)  
-- **3.7 V Li-ion/LiPo** + TP4056 charger (with protection) + 5 V boost  
-- **Momentary push button**  
-- *(Optional)* OLED I²C screen  
-
----
 
 
-
-| Signal | ESP32-CAM Pin | Notes |
-|---|---|---|
-| TF-Luna TX/RX | GPIO16 (RX2) / GPIO17 (TX2) | `Serial2` |
-| HC-SR04 TRIG/ECHO | GPIO14 / GPIO15 | ECHO via divider |
-| Vibration motor | GPIO12 → transistor | base 1kΩ, diode across motor |
-| Buzzer | GPIO13 | Active buzzer |
-| Button | GPIO2 | `INPUT_PULLUP` |
-| Power | 5 V / GND | From boost module; common GND |
 
 ---
 
