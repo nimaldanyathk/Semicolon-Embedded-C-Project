@@ -1,9 +1,6 @@
 # 👁️‍🗨️ Semicolon — *Where syntax meets Sight*
 An assistive device built on **ESP32-CAM + TF-Luna LiDAR + HC-SR04**, running an **Edge Impulse** model for on-device currency detection, with haptics and buzzer feedback.
 
-<p align="center">
-  <img src="assets/hero.jpg" width="80%" alt="Device hero image"/>
-</p>
 
 <div align="center">
 
