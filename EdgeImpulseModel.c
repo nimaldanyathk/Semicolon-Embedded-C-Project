@@ -24,7 +24,7 @@
 // https://github.com/espressif/arduino-esp32/releases/tag/2.0.4
 
 /* Includes ---------------------------------------------------------------- */
-#include <c_currency_inferencing.h>
+#include <c_currency_inferencing.h> //edge impulse model library
 #include "edge-impulse-sdk/dsp/image/image.hpp"
 
 #include "esp_camera.h"
