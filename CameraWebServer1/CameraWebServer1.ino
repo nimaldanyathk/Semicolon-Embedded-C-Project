@@ -77,6 +77,7 @@ void readLidarOnce() {
 // =========================== ESP32 temp (approx) ===========================
 extern "C" uint8_t temprature_sens_read();
 // Cache temperature readings to reduce sensor calls (100ms cache)
+// Note: Not thread-safe. If called from multiple tasks, add synchronization.
 static float cachedTemp = 0.0f;
 static uint32_t lastTempReadMs = 0;
 float getChipTemperatureC() {

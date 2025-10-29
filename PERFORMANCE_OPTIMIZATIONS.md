@@ -56,6 +56,7 @@ The `getChipTemperatureC()` function was called repeatedly in tight loops (every
 #### Solution
 Added a 100ms cache for temperature readings:
 ```cpp
+// Note: Not thread-safe. If called from multiple tasks, add synchronization.
 static float cachedTemp = 0.0f;
 static uint32_t lastTempReadMs = 0;
 float getChipTemperatureC() {
@@ -67,6 +68,8 @@ float getChipTemperatureC() {
   return cachedTemp;
 }
 ```
+
+**Note**: The current implementation is not thread-safe. In most cases, this function is called from a single task (HTTP handler or main loop), so synchronization is not needed. If your application calls this from multiple tasks, add a mutex or use atomic operations.
 
 #### Benefits
 - Reduces sensor read calls by ~90% in SSE loops
