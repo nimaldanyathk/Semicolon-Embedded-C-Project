@@ -28,7 +28,9 @@ int readLidarDistanceCM() {
     if (LidarSerial.read() == 0x59 && LidarSerial.read() == 0x59) {
       buf[0] = 0x59; buf[1] = 0x59;
       for (int i=2; i<9; i++) buf[i] = LidarSerial.read();
-      uint16_t checksum = 0; for (int i=0; i<8; i++) checksum += buf[i];
+      // Optimized checksum calculation - start with header bytes
+      uint16_t checksum = 0x59 + 0x59;
+      for (int i=2; i<8; i++) checksum += buf[i];
       if ((checksum & 0xFF) == buf[8]) {
         int distance = buf[2] | (buf[3] << 8);
         return distance; // cm
@@ -40,8 +42,16 @@ int readLidarDistanceCM() {
 
 // =========================== ESP32 temp (rough) ===========================
 extern "C" uint8_t temprature_sens_read();
+// Cache temperature readings to reduce sensor calls (100ms cache)
+static float cachedTemp = 0.0f;
+static uint32_t lastTempReadMs = 0;
 float getChipTemperatureC() {
-  return (temprature_sens_read() - 32) / 1.8f; // F→C approx.
+  uint32_t now = millis();
+  if (now - lastTempReadMs >= 100) {
+    cachedTemp = (temprature_sens_read() - 32) / 1.8f; // F→C approx.
+    lastTempReadMs = now;
+  }
+  return cachedTemp;
 }
 
 // =========================== Web UI (port 82) ===========================
@@ -51,14 +61,13 @@ static esp_err_t sensors_get_handler(httpd_req_t *req) {
   int   lidar = readLidarDistanceCM();
   float tempC = getChipTemperatureC();
 
-  String json = "{";
-  json += "\"lidar\":" + String(lidar) + ",";
-  json += "\"temp\":" + String(tempC, 1);
-  json += "}";
+  // Use snprintf instead of String concatenation for better performance
+  char json[64];
+  int len = snprintf(json, sizeof(json), "{\"lidar\":%d,\"temp\":%.1f}", lidar, tempC);
 
   httpd_resp_set_type(req, "application/json");
   httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
-  return httpd_resp_send(req, json.c_str(), json.length());
+  return httpd_resp_send(req, json, len);
 }
 
 static const char PROGMEM INDEX_HTML[] = R"HTML(

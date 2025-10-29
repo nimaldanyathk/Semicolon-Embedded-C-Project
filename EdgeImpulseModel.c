@@ -142,6 +142,13 @@ void setup()
         ei_printf("Camera initialized\r\n");
     }
 
+    // Allocate snapshot buffer once during setup instead of in every loop iteration
+    snapshot_buf = (uint8_t*)malloc(EI_CAMERA_RAW_FRAME_BUFFER_COLS * EI_CAMERA_RAW_FRAME_BUFFER_ROWS * EI_CAMERA_FRAME_BYTE_SIZE);
+    if(snapshot_buf == nullptr) {
+        ei_printf("ERR: Failed to allocate snapshot buffer!\n");
+        return;
+    }
+
     ei_printf("\nStarting continious inference in 2 seconds...\n");
     ei_sleep(2000);
 }
@@ -159,11 +166,10 @@ void loop()
         return;
     }
 
-    snapshot_buf = (uint8_t*)malloc(EI_CAMERA_RAW_FRAME_BUFFER_COLS * EI_CAMERA_RAW_FRAME_BUFFER_ROWS * EI_CAMERA_FRAME_BYTE_SIZE);
-
-    // check if allocation was successful
+    // Buffer is now allocated once in setup() instead of every loop iteration
+    // check if buffer is still valid
     if(snapshot_buf == nullptr) {
-        ei_printf("ERR: Failed to allocate snapshot buffer!\n");
+        ei_printf("ERR: Snapshot buffer not allocated!\n");
         return;
     }
 
@@ -173,7 +179,6 @@ void loop()
 
     if (ei_camera_capture((size_t)EI_CLASSIFIER_INPUT_WIDTH, (size_t)EI_CLASSIFIER_INPUT_HEIGHT, snapshot_buf) == false) {
         ei_printf("Failed to capture image\r\n");
-        free(snapshot_buf);
         return;
     }
 
@@ -237,8 +242,7 @@ void loop()
     }
 #endif
 
-
-    free(snapshot_buf);
+    // No need to free - buffer is reused across loop iterations
 
 }
 
