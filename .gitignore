@@ -1,0 +1,33 @@
+# Build artifacts
+*.o
+*.elf
+*.bin
+*.hex
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.swp
+*.swo
+*~
+
+# Dependencies
+node_modules/
+
+# CodeQL
+_codeql_detected_source_root
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Archive files (if needed, remove this line)
+*.zip
