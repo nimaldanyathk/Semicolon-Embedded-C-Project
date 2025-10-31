@@ -56,8 +56,9 @@ int readLidarDistanceCM() {
     if (LidarSerial.read() == 0x59 && LidarSerial.read() == 0x59) {
       buf[0] = 0x59; buf[1] = 0x59;
       for (int i=2; i<9; i++) buf[i] = LidarSerial.read();
-      uint16_t checksum = 0;
-      for (int i=0; i<8; i++) checksum += buf[i];
+      // Optimized checksum calculation - start with header bytes
+      uint16_t checksum = 0x59 + 0x59;
+      for (int i=2; i<8; i++) checksum += buf[i];
       if ((checksum & 0xFF) == buf[8]) {
         int distance = buf[2] + (buf[3] << 8);
         return distance;
@@ -72,8 +73,17 @@ int readLidarDistanceCM() {
 // ===========================
 // ESP-IDF provides a raw internal sensor
 extern "C" uint8_t temprature_sens_read();
+// Cache temperature readings to reduce sensor calls (100ms cache)
+// Note: Not thread-safe. If called from multiple tasks, add synchronization.
+static float cachedTemp = 0.0f;
+static uint32_t lastTempReadMs = 0;
 float getChipTemperatureC() {
-  return (temprature_sens_read() - 32) / 1.8; // convert F → C
+  uint32_t now = millis();
+  if (now - lastTempReadMs >= 100) {
+    cachedTemp = (temprature_sens_read() - 32) / 1.8f; // convert F → C
+    lastTempReadMs = now;
+  }
+  return cachedTemp;
 }
 
 // ===========================

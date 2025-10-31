@@ -48,8 +48,17 @@ void readLidarContinuously() {
 
 // =========================== ESP32 temp (approx) ===========================
 extern "C" uint8_t temprature_sens_read();
+// Cache temperature readings to reduce sensor calls (100ms cache)
+// Note: Not thread-safe. If called from multiple tasks, add synchronization.
+static float cachedTemp = 0.0f;
+static uint32_t lastTempReadMs = 0;
 float getChipTemperatureC() {
-  return (temprature_sens_read() - 32) / 1.8f; // F->C approx.
+  uint32_t now = millis();
+  if (now - lastTempReadMs >= 100) {
+    cachedTemp = (temprature_sens_read() - 32) / 1.8f; // F->C approx.
+    lastTempReadMs = now;
+  }
+  return cachedTemp;
 }
 
 // =========================== Web UI (port 82) ===========================
@@ -59,17 +68,16 @@ httpd_handle_t web_httpd = nullptr;
 static esp_err_t sensors_get_handler(httpd_req_t *req) {
   float tempC = getChipTemperatureC();
 
-  String json = "{";
-  json += "\"lidar\":" + String((int)latestDistance) + ",";
-  json += "\"temp\":" + String(tempC, 1);
-  json += "}";
+  // Use snprintf instead of String concatenation for better performance
+  char json[64];
+  int len = snprintf(json, sizeof(json), "{\"lidar\":%d,\"temp\":%.1f}", (int)latestDistance, tempC);
 
   httpd_resp_set_type(req, "application/json");
   httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   httpd_resp_set_hdr(req, "Cache-Control", "no-store, no-cache, must-revalidate");
   httpd_resp_set_hdr(req, "Pragma", "no-cache");
   httpd_resp_set_hdr(req, "Connection", "keep-alive"); // faster reuse
-  return httpd_resp_send(req, json.c_str(), json.length());
+  return httpd_resp_send(req, json, len);
 }
 
 // ---------- /events SSE: pushes latest data ~60ms ----------
@@ -83,17 +91,17 @@ static esp_err_t events_get_handler(httpd_req_t *req) {
 
   const TickType_t tickDelay = pdMS_TO_TICKS(60); // ~16 fps
   uint32_t lastPing = xTaskGetTickCount();
+  
+  // Pre-allocate buffer for SSE messages to avoid repeated allocations
+  char line[80];
 
   for (;;) {
     // data event
     float tempC = getChipTemperatureC();
-    String line = "data:{\"lidar\":";
-    line += String((int)latestDistance);
-    line += ",\"temp\":";
-    line += String(tempC, 1);
-    line += "}\n\n";
+    // Use snprintf instead of String concatenation for better performance
+    int len = snprintf(line, sizeof(line), "data:{\"lidar\":%d,\"temp\":%.1f}\n\n", (int)latestDistance, tempC);
 
-    if (httpd_resp_send_chunk(req, line.c_str(), line.length()) != ESP_OK) break;
+    if (httpd_resp_send_chunk(req, line, len) != ESP_OK) break;
 
     // keepalive comment every ~10s (helps some proxies/hotspots)
     if ((xTaskGetTickCount() - lastPing) > pdMS_TO_TICKS(10000)) {
