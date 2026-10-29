@@ -57,6 +57,12 @@ static void readSensors() {
         setReading(ultrasonic, distance, duration > 0 && distance >= 2 && distance <= 300);
     }
 #endif
+    // Latch expiry so an unplugged sensor cannot resurrect after a full clock wrap.
+    const uint32_t now = millis();
+    portENTER_CRITICAL(&readingsMux);
+    if (lidar.valid && now - lidar.received_ms >= settings::sensorTimeoutMs) lidar.valid = false;
+    if (ultrasonic.valid && now - ultrasonic.received_ms >= settings::sensorTimeoutMs) ultrasonic.valid = false;
+    portEXIT_CRITICAL(&readingsMux);
 }
 
 static esp_err_t sensors(httpd_req_t *req) {
@@ -116,10 +122,18 @@ static bool startDashboard() {
 static void startAccessPoint() {
     const size_t length = strlen(SEMICOLON_AP_PASSWORD);
     if (apStarted || length < 8 || length > 63) return;
+    static bool attempted = false;
+    static uint32_t lastAttemptMs = 0;
+    if (attempted && millis() - lastAttemptMs < 5000) return;
+    attempted = true;
+    lastAttemptMs = millis();
     if (WiFi.softAP("Semicolon", SEMICOLON_AP_PASSWORD)) {
         apStarted = true;
         Serial.print("Access point: Semicolon — http://");
         Serial.println(WiFi.softAPIP());
+    } else {
+        WiFi.enableAP(false); // Do not leave a default AP active after failure.
+        Serial.println("Access point failed to start; retrying in 5 seconds.");
     }
 }
 
@@ -132,7 +146,7 @@ void setup() {
     digitalWrite(settings::ultrasonicTrig, LOW);
     pinMode(settings::ultrasonicEcho, INPUT);
 #endif
-    WiFi.mode(WIFI_AP_STA);
+    WiFi.mode(WIFI_STA); // Enable AP mode only after validating its password.
     WiFi.setSleep(false);
     WiFi.setAutoReconnect(true);
     if (strlen(SEMICOLON_WIFI_SSID)) {

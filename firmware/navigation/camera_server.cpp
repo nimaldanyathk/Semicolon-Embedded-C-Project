@@ -13,7 +13,10 @@ static httpd_handle_t streamServer;
 
 static esp_err_t capture(httpd_req_t *req) {
     if (xSemaphoreTake(cameraMutex, pdMS_TO_TICKS(100)) != pdTRUE) {
-        return httpd_resp_send_err(req, HTTPD_503_SERVICE_UNAVAILABLE, "Camera busy");
+        httpd_resp_set_status(req, "503 Service Unavailable");
+        httpd_resp_set_type(req, "text/plain");
+        httpd_resp_set_hdr(req, "Retry-After", "1");
+        return httpd_resp_sendstr(req, "Camera busy");
     }
     camera_fb_t *frame = esp_camera_fb_get();
     esp_err_t result;
