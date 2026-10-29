@@ -1,8 +1,21 @@
-# Build artifacts
+# Local configuration and dependencies
+/include/config.h
+/.venv/
+/.platformio/
+/lib/*
+!/lib/semicolon_core/
+/data/
+/Dataset_preprocessed/
+
+# Build products
+/.pio/
+/build*/
 *.o
+*.a
 *.elf
 *.bin
 *.hex
+*.zip
 
 # IDE files
 .vscode/
@@ -28,6 +41,3 @@ _codeql_detected_source_root
 __pycache__/
 *.pyc
 *.pyo
-
-# Archive files (if needed, remove this line)
-*.zip
