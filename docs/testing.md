@@ -18,7 +18,7 @@ Clang/GCC toolchain. The dashboard tests require Node.js 18+ (CI uses 22).
 | --- | --- |
 | LiDAR parser | Checksum, little-endian decoding, partial frames, corrupt/truncated-frame resynchronization, noise, range/strength limits |
 | Reading selection | LiDAR priority, ultrasonic fallback, invalid data, expiry boundary, timestamp wraparound |
-| Dashboard | Threshold validation and range/type checks; unavailable data distinguished from valid readings |
+| Dashboard | Threshold/range/type validation; gesture-gated audio; stale/disconnected/hidden-page alert cleanup; sensor unavailability |
 | Desktop matching | Missing/empty datasets, invalid images, constant-image rejection, matching/nonmatching synthetic images, invalid dimensions, old-template clearing |
 | CLI | Help and failure exit codes for missing datasets/invalid camera index |
 | Repository | Tracked binary/config exclusion, credential macros, relative Markdown links |
