@@ -140,7 +140,10 @@ extern "C" int currency_run_webcam(int cameraIndex, int enableSpeech) {
             cv::cvtColor(gray, gray, cv::COLOR_BGR2GRAY);
             const int note = currency_match(gray.data, gray.rows, gray.cols);
             if (note < 0) { cv::destroyAllWindows(); return -1; }
-            if (note == 0) { if (++unknownFrames >= 10) lastAnnounced = 0; }
+            if (note == 0) {
+                unknownFrames = std::min(unknownFrames + 1, 10);
+                if (unknownFrames == 10) lastAnnounced = 0;
+            }
             else {
                 unknownFrames = 0;
                 if (note != lastAnnounced) {
